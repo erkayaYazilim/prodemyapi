@@ -810,6 +810,7 @@ $(async function(){
     // “Boş satır” diyerek blankRow() dizisini ekle
     const node = table.row.add(blankRow()).draw(false).node();
     // Boş satırı en sonda tutmak adına, 13. sütun (gizli) çok büyük değer atıyoruz
+    $(node).addClass("blank-row");
     $(node).find("td").last().text("");
     $(node).attr("data-created", Number.MAX_SAFE_INTEGER);
     // Son sayfaya geçir
@@ -907,6 +908,13 @@ $(async function(){
 
     // 4) Yeni bir boş satır ekle
     addRow();
+
+setTimeout(() => {
+  const $new = $("#gelirGiderTablo tbody tr.blank-row:last");
+  $new.find("input").first().focus();
+}, 50);
+
+
   });
 
 let sahaciRowToDelete = null;

@@ -860,6 +860,7 @@ $('#confirmRequestDelete').on('click', async () => {
       function addRow() {
         if (unsavedRowExists()) return;
         const node = table.row.add(blankRow()).draw(false).node();
+        $(node).addClass("blank-row");
         $(node).find("td").eq(11).text("");
         $(node).attr("data-created", Number.MAX_SAFE_INTEGER);
         table.page("last").draw(false);
@@ -947,6 +948,13 @@ $('#confirmRequestDelete').on('click', async () => {
         table.page("last").draw(false);
 
         addRow();
+          setTimeout(() => {
+    $("#gelirGiderTablo tbody tr.blank-row:last")
+      .find("td").eq(0)     // 1 = Tarih sütunu
+      .find("input")
+      .focus();
+  }, 50);
+
       });
 
       /*────────── Filtreleme ──────────*/

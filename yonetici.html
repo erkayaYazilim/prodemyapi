@@ -1181,7 +1181,18 @@ $('#confirmDelete').on('click', async function(){
       table.page("last").draw(false);
 
       // 4) Yeni boş satır ekle
-      addRow();
+     // 4) Yeni boş satır ekle
+  addRow();
+
+  // 5) Yeni satır eklendikten sonra Tarih input’una focus ver
+  setTimeout(() => {
+    $("#gelirGiderTablo tbody tr.blank-row:last")
+      .find("td").eq(1)     // 1 = Tarih sütunu
+      .find("input")
+      .focus();
+  }, 50);
+
+      
     });
 
     /*────────── 11 | Filtreleme ──────────*/
