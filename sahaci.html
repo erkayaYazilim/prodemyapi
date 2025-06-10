@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+
+    <title>Prodem Yapı | Sahacı</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- DataTable ve jQuery UI -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/colresizable/colResizable-1.6.min.js"></script>
+
+
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --accent-color: #4cc9f0;
+        --success-color: #4ad66d;
+        --warning-color: #ffbe0b;
+        --danger-color: #f72585;
+        --light-color: #f8f9fa;
+        --dark-color: #212529;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        margin: 0;
+        padding: 0;
+        color: var(--dark-color);
+        line-height: 1.6;
+      }
+
+      header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 25px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        box-shadow: var(--box-shadow);
+        margin-bottom: 30px;
+      }
+      /* Excel butonu görünüm */
+      .excelButton {
+        background-color: #28a745 !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 4px;
+        padding: 6px 12px;
+        cursor: pointer;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Butonu sağa yaslamak için */
+      div.dataTables_wrapper .dt-buttons {
+        float: right;
+        margin-bottom: 10px;
+      }
+      .container {
+        max-width: 1600px;
+        margin: 30px auto;
+        background-color: white;
+        padding: 30px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+      }
+
+      .user-info {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 25px;
+        padding: 15px;
+        background-color: var(--light-color);
+        border-radius: var(--border-radius);
+        display: inline-block;
+        position: relative;
+      }
+
+      .user-info strong {
+        color: var(--primary-color);
+      }
+
+      .user-info i {
+        color: var(--primary-color);
+      }
+
+      .assigned-project {
+        font-size: 18px;
+        color: #333;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        background-color: var(--light-color);
+        border-radius: var(--border-radius);
+      }
+
+      .assigned-project i {
+        color: var(--primary-color);
+      }
+
+      #gelirGiderTablo {
+        width: 100%;
+        background-color: white;
+        margin-bottom: 25px;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        table-layout: fixed;
+      }
+
+      #gelirGiderTablo thead th {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        border: none;
+        position: sticky;
+        top: 0;
+      }
+
+      #gelirGiderTablo tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e9ecef;
+        transition: var(--transition);
+      }
+
+      #gelirGiderTablo tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      #gelirGiderTablo tbody tr:hover td {
+        background-color: rgba(67, 97, 238, 0.05);
+      }
+      #gelirGiderTablo th:nth-child(8),
+      #gelirGiderTablo th:nth-child(9) {
+        min-width: 80px;
+      }
+
+      #gelirGiderTablo td:nth-child(8),
+      #gelirGiderTablo td:nth-child(9) {
+        min-width: 80px;
+      }
+
+      #gelirGiderTablo th:nth-child(10) {
+        min-width: 115px;
+      }
+
+      #gelirGiderTablo td:nth-child(10) {
+        min-width: 115px;
+      }
+      #gelirGiderTablo select,
+      #gelirGiderTablo input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-family: inherit;
+        transition: var(--transition);
+      }
+
+      #gelirGiderTablo select:focus,
+      #gelirGiderTablo input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.2);
+      }
+
+      .add-row-btn {
+        margin-top: 20px;
+        background: linear-gradient(to right, var(--success-color), #2ecc71);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+        box-shadow: var(--box-shadow);
+      }
+
+      .add-row-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Buton Konteyneri */
+      .action-buttons {
+        display: flex;
+        gap: 8px; /* Butonlar arası boşluk */
+      }
+
+      /* Ortak Buton Stili */
+      .edit-btn,
+      .save-btn {
+        min-width: 100px;
+        flex: 1; /* Eşit genişlikte olmaları için */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Düzenle Butonu */
+      .edit-btn {
+        background: linear-gradient(to right, #4cc9f0, #4361ee);
+        color: white;
+      }
+
+      .edit-btn:hover {
+        background: linear-gradient(to right, #3a86ff, #3f37c9);
+        transform: translateY(-1px);
+      }
+
+      /* Kaydet Butonu */
+      .save-btn {
+        background: linear-gradient(to right, #ffbe0b, #ff9e00);
+        color: #000;
+      }
+
+      .save-btn:hover {
+        background: linear-gradient(to right, #ff9e00, #ff8500);
+      }
+      .pagination-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 15px;
+        gap: 5px;
+      }
+
+      .dataTables_info {
+        order: 2;
+        font-size: 14px;
+        color: #6c757d;
+      }
+
+      .dataTables_paginate {
+        order: 1;
+      }
+
+      .dataTables_wrapper {
+        position: relative;
+      }
+
+      .dataTables_length {
+        margin-bottom: 20px; /* Altına 20px boşluk bırakır */
+      }
+
+      .dataTables_length select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      .dataTables_paginate .paginate_button {
+        padding: 6px 12px;
+        margin-left: 5px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        transition: var(--transition);
+      }
+
+      .dataTables_paginate .paginate_button:hover {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        color: white !important;
+        border-color: var(--primary-color);
+      }
+
+      .dataTables_paginate .paginate_button.current {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        color: white !important;
+        border-color: var(--primary-color);
+      }
+
+      @media (max-width: 1400px) {
+        .container {
+          margin: 20px;
+          padding: 20px;
+        }
+
+        #gelirGiderTablo thead th,
+        #gelirGiderTablo tbody td {
+          padding: 10px 12px;
+        }
+      }
+      /* satırı kırmızı yapar */
+      .no-receipt-row {
+        background-color: #f02e2e !important;
+        color: white !important;
+      }
+
+       #gelirGiderTablo th,
+  #gelirGiderTablo td {
+    font-size: 12px;
+  }
+
+      /* —— Filtreleme UI’sı için temel stil —— */
+.compact-search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.compact-search-container .search-select,
+.compact-search-container input[type="text"] {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.compact-search-container .search-button {
+  padding: 0.4rem 0.8rem;
+  background-color: #4361ee;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.compact-search-container .filter-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.compact-search-container .filter-item input {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.compact-search-container .remove-btn {
+  cursor: pointer;
+  color: #e63946;
+  font-weight: bold;
+  margin-left: 0.2rem;
+}
+
+
+
+/* 1) Tüm sütunlara ortak min-width tanımı */
+#gelirGiderTablo th,
+#gelirGiderTablo td {
+  /* Örneğin tüm sütunlar en az 80px genişlikte olsun */
+  min-width: 80px;
+}
+
+/* 2) “Açıklama” sütununu (5. sütun) diğerlerinden daha geniş yap */
+#gelirGiderTablo th:nth-child(5),
+#gelirGiderTablo td:nth-child(5) {
+  /* Örneğin Açıklama sütunu en az 300px genişlikte olsun */
+  min-width: 600px;
+  width: 300px;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;               /* tüm ekran yüksekliği */
+  background: rgba(0, 0, 0, 0.6);
+  display: none;               /* .show ile açacağız */
+  align-items: center;         /* dikey ortala */
+  justify-content: center;     /* yatay ortala */
+  z-index: 1000;
+}
+
+/* show sınıfı eklenince modal’ı göster */
+.modal.show {
+  display: flex;
+}
+
+/* İçerik kutusu ortada */
+.modal-dialog {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 360px;
+  padding: 20px;
+}
+
+/* Mesaj satırı */
+.modal-body {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Alt kısımdaki butonlar yan yana */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-footer button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Onay (Sil) butonu */
+.modal-footer .confirm-btn {
+  background-color: rgba(247, 37, 133, 0.2);
+  color: var(--danger-color);
+}
+.modal-footer .confirm-btn:hover {
+  background-color: rgba(247, 37, 133, 0.4);
+}
+
+/* İptal butonu */
+.modal-footer .cancel-btn {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: #333;
+}
+.modal-footer .cancel-btn:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+      
+    </style>
+  </head>
+  <body>
+    <header>Prodem Yapı</header>
+
+    <div class="container">
+      <div class="user-info">
+        <i class="fas fa-user" style="margin-right: 8px; color: var(--primary-color)"></i>
+        Giriş Yapan:
+        <strong>İsim Soyisim</strong>
+      </div>
+      <!-- ─── Sahacı Sayfası İçin: Filtreleme UI’sı ─── -->
+<div class="compact-search-container" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+  <!-- Filtre Seçin Dropdown -->
+  <div class="search-type">
+    <select id="filter-select" class="search-select" style="padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid #ccc;">
+      <option disabled selected>Filtre seçin</option>
+      <option value="tarih">Tarih</option>
+      <option value="tedarikci">Tedarikçi</option>
+      <option value="musteri">Müşteri</option>
+      <option value="proje">Proje</option>
+      <option value="aciklama">Açıklama</option>
+      <option value="tutar">Tutar</option>
+      <option value="gider">Gider</option>
+      <option value="kdv">KDV</option>
+      <option value="kanal">Ödeme Kanalı</option>
+      <option value="makbuz">Tahsilat Makbuzu</option>
+    </select>
+  </div>
+
+  <!-- Dinamik filtre kutuları buraya eklenecek -->
+  <div class="filter-list" id="filter-list" style="display: flex; gap: 0.5rem; flex-wrap: wrap;"></div>
+
+  <!-- Ara butonu -->
+  <button class="search-button" onclick="performSearch()" style="padding: 0.4rem 0.8rem; border:none; background:#4361ee; color:white; border-radius:4px; cursor:pointer;">
+    <i class="fas fa-search"></i> Ara
+  </button>
+</div>
+
+
+<table id="gelirGiderTablo" class="display">
+  <thead>
+    <tr>
+      <th>Tarih</th>
+      <th>Tedarikçi</th>
+      <th>Müşteri</th>
+      <th>Proje</th>
+      <th>Açıklama</th>
+      <th>Tutar</th>
+      <th>Gider</th>
+      <th>KDV</th>
+      <th>Ödeme Kanalı</th>
+      <th>Tahsilat Makbuzu</th>
+      <th>İşlemler</th>
+      <th>Kasa</th>
+      <!-- 13. sütun: createdAt timestamp (gizli) -->
+      <th style="display:none;">createdAt</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Satırlar blankRow() veya txRow() ile eklenecek -->
+  </tbody>
+</table>
+
+
+
+      <div class="pagination-wrapper">
+        <div class="dataTables_paginate"></div>
+        <div class="dataTables_info"></div>
+      </div>
+
+    </div>
+
+    <!-- Silme-Onay Modal’ı -->
+<div id="sahaciDeleteModal" class="modal">
+  <div class="modal-dialog">
+    <div class="modal-body">
+      Bu kaydı silme isteği olarak göndermek istediğine emin misin?
+    </div>
+    <div class="modal-footer">
+      <button id="confirmSahaciDelete" class="confirm-btn">Evet, Gönder</button>
+      <button id="cancelSahaciDelete"  class="cancel-btn">İptal</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /*────────── 1 | Firebase init ──────────*/
+  firebase.initializeApp({
+    apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+    authDomain: "barkod-5de5e.firebaseapp.com",
+    projectId:  "barkod-5de5e",
+    storageBucket: "barkod-5de5e.appspot.com"
+  });
+  const db = firebase.firestore();
+
+  /*────────── 2 | Oturum kontrolü ──────────*/
+  const uid  = localStorage.getItem("uid");
+  const role = localStorage.getItem("role");
+  const name = localStorage.getItem("name");
+  if (!uid || role !== "sahaci") {
+    location.href = "index.html";
+  }
+  document.querySelector(".user-info strong").textContent = name;
+  /*──────── Format / parse helpers ────────*/
+const trFmt   = new Intl.NumberFormat("tr-TR", { minimumFractionDigits:2 });
+const toFloat = (str) =>
+  parseFloat(String(str).replace(/\./g,"").replace(",",".").trim()) || 0;
+function num(n){ return trFmt.format(n); }
+
+  /*────────── 3 | Lookup verilerini yükle ──────────*/
+  let supplierOptionsHtml = "";
+  let projectOptionsHtml  = "";
+  let channelOptionsHtml  = "";
+
+  async function loadLookups() {
+    // Tedarikçiler
+ const supSnap = await db.collection("suppliers")
+                        .orderBy("name","asc")
+                         .get();
+    supSnap.forEach(doc => {
+      const nm = doc.data().name;
+      supplierOptionsHtml += `<option value="${nm}">`;
+    });
+    // Projeler
+  const projSnap = await db.collection("projects")
+                             .orderBy("name","asc")
+                             .get();
+    projSnap.forEach(doc => {
+      const nm = doc.data().name;
+      projectOptionsHtml += `<option value="${nm}">`;
+    });
+    // Ödeme kanalları
+const paySnap = await db.collection("payments")
+                          .orderBy("name","asc")
+                           .get();
+    paySnap.forEach(doc => {
+      const nm = doc.data().name;
+      channelOptionsHtml += `<option>${nm}</option>`;
+    });
+
+    // Datalist elemanlarını DOM’a ekle
+    $('body').append(`
+      <datalist id="supplierList">${supplierOptionsHtml}</datalist>
+      <datalist id="projectList">${projectOptionsHtml}</datalist>
+    `);
+  }
+
+  /*────────── 4 | Yardımcı fonksiyonlar ──────────*/
+  const redIfNoReceipt = ($row, v) => {
+    if (v === "Makbuz Yok") {
+      $row.addClass("no-receipt-row");
+    }
+  };
+  const unsavedRowExists = () => {
+    return $("#gelirGiderTablo .save-btn:not([disabled])").length > 0;
+  };
+
+  /*────────── 5 | “Boş satır” + “Kaydedilmiş satır” tanımları ──────────*/
+  // Boş satır HTML’i (12 görünür sütun + 13. sütun: created timestamp)
+  // ---------------------------------------------------
+// 1) Boş satır için 13 <td>
+// ────────── Boş satır (blankRow) fonksiyonu ──────────
+// 13 <td> dönüyor: 12 görünür + 1 gizli (createdAt)
+const blankRow = () => [
+  `<td><input type="text" placeholder="Tarih"></td>`,
+  `<td><input list="supplierList" placeholder="Tedarikçi"></td>`,
+  `<td><input type="text"  placeholder="Müşteri"></td>`,
+  `<td><input list="projectList"  placeholder="Proje"></td>`,
+  `<td><input type="text"  placeholder="Açıklama"></td>`,
+  `<td><input type="number" placeholder="Tutar"></td>`,
+  `<td><input type="number" placeholder="Gider"></td>`,
+  `<td>
+     <select>
+       <option>Seçiniz</option>
+       <option>Fatura</option>
+       <option>Fiş</option>
+       <option>N/A</option>
+     </select>
+   </td>`,
+  `<td>
+     <select>
+       <option>Seçiniz</option>
+       ${channelOptionsHtml}
+     </select>
+   </td>`,
+  `<td>
+     <select>
+       <option>Seçiniz</option>
+       <option>Makbuz Yok</option>
+       <option>Alındı</option>
+       <option>Alınmadı</option>
+     </select>
+   </td>`,
+  `<td class="action-buttons">
+     <button class="save-btn"><i class="fas fa-save"></i> Kaydet</button>
+   </td>`,
+  ``,                                 // ← Kasa hücresi: artık etiket yok, sadece ham string
+  `<td style="display:none;">${Number.MAX_SAFE_INTEGER}</td>`
+];
+
+
+// ────────── Firestore’dan gelen satırı oluşturacak fonksiyon (txRow) ──────────
+//  Yine tam 13 <td> dönüyor, sonuncusu gizli “createdAt” hücresi.
+const txRow = (tx,docId) => [
+  tx.date        || "",
+  tx.supplier    || "",
+  tx.customer    || "",
+  tx.project     || "",
+  tx.description || "",
+  tx.amount      || 0,    // Artık ham sayı olarak geliyor
+  tx.expense     || 0,    // Artık ham sayı olarak geliyor
+  tx.vat         || "",
+  tx.channel     || "",
+  tx.receipt     || "",
+  `<td class="action-buttons">
+     <button class="save-btn" disabled title="Kayıtlı">
+       <i class="fas fa-check"></i>
+     </button>
+     ${
+       tx.pendingDeletion
+         ? `<button class="pending-delete-btn" disabled title="Silme talebi bekleniyor">
+              <i class="fas fa-hourglass-half"></i>
+            </button>`
+         : `<button class="request-delete-btn" data-id="${docId}" title="Silme isteği gönder">
+              <i class="fas fa-trash-alt"></i>
+            </button>`
+     }
+   </td>`,
+   
+  tx.cash        || 0,    // Artık ham sayı olarak geliyor
+  tx.createdAt?.toMillis() || 0
+];
+
+
+
+
+  /*────────── 6 | DataTable kurulum ve Firestore’dan sayfa sayfa okuma ──────────*/
+  const PAGE_SIZE = 50;   // Her defasında çekilecek belge sayısı
+  let nextCursor = null;  // Firestore cursor (son alınan doküman)
+
+  let table;
+$(async function(){
+  await loadLookups();
+
+  table = $("#gelirGiderTablo").DataTable({
+    paging: true,
+           pageLength: 100,                      // varsayılan seçim
+  lengthMenu: [ [10, 25, 100, 200,400],     // menüdeki değerler
+                ["10 kayıt", "25 kayıt", "100 kayıt", "200 kayıt","400 kayıt"] ],
+    searching: false,
+    ordering: true,
+    order: [[12, "asc"]],      // createdAt sütunu = 12, gizli
+
+    columnDefs: [
+     {
+        targets: 4,        // “Açıklama” sütunu indeksi: 4 (0-bağlantılı)
+        width: "400px"     // kesin 300px
+      },
+       {
+        targets: [0,1,2,3,5,6,7,8,9,10,11],
+        width: "80px"      // diğer sütunlara dar genişlik
+      },
+      { targets: 12, visible: false },  // createdAt’ı gizle
+
+      {
+        
+        targets: [5, 6, 11],  // 5=Tutar, 6=Gider, 11=Kasa
+        render: function(data, type, row, meta) {
+          // Eğer cell içeriği bir <input> HTML’i ise, aynen geri ver:
+          if (/<input/.test(data) || (typeof data === "string" && data.trim().startsWith("<input"))) {
+            return data;
+          }
+          // Aksi halde fmtTL ile formatla:
+          return fmtTL(data, type);
+        }
+      }
+    ],
+
+    dom: '<"top"lBf>rt<"bottom"ip><"clear">',
+    buttons: [{
+      extend    : "excelHtml5",
+      className : "excelButton",
+      text      : "Excel’e Aktar",
+      exportOptions: {
+        columns: [0,1,2,3,4,5,6,7,8,9,11],
+        modifier: { search: "applied", order: "applied", page: "all" },
+        rows: function(idx, data, node) {
+          if ($(node).hasClass("blank-row")) return false;
+          const f = window.__excelFilterMap || {};
+          if (!Object.keys(f).length) return true;
+          for (const colIdx in f) {
+            const cellTxt = $("<div>").html(data[colIdx]).text().trim().toLowerCase();
+            if (cellTxt !== f[colIdx]) return false;
+          }
+          return true;
+        }
+      }
+    }],
+
+    language: {
+      lengthMenu: "_MENU_ kayıt / sayfa",
+      paginate: { previous: "<", next: ">" },
+      info: "_TOTAL_ kayıttan _START_-_END_ arası",
+      emptyTable: "Veri yok"
+    }
+  });
+
+
+
+      do {
+  await fetchNextPage();
+} while ( nextCursor );
+  addRow();
+  updateRunningCash();
+
+  $("#gelirGiderTablo").colResizable({
+    liveDrag: true,
+    gripInnerHtml: "<div class='grip'></div>",
+    draggingClass: "dragging"
+  });
+});
+
+
+  /*────────── 7 | Firestore’dan “sayfa sayfa” veri çekme ──────────*/
+  async function fetchNextPage() {
+    let q = db.collection("transactions")
+              .where("createdBy.uid", "==", uid)
+              .orderBy("createdAt", "desc")
+              .limit(PAGE_SIZE);
+
+    if (nextCursor) {
+      q = q.startAfter(nextCursor);
+    }
+
+    const snap = await q.get();
+    snap.forEach(doc => {
+      const data = doc.data();
+      // “Kaydedilmiş” satırı, txRow ile oluşturup tabloya ekle
+      const newNode = table.row.add(txRow(data, doc.id)).draw(false).node();
+      // Bu satıra created timestamp’ini attribute olarak da ekle
+      $(newNode).attr("data-created", data.createdAt?.toMillis() || 0);
+      redIfNoReceipt($(newNode), data.receipt);
+    });
+
+    // Eğer PAGE_SIZE kadar belge geldiyse, cursor’u ayarla
+    nextCursor = (snap.size === PAGE_SIZE)
+      ? snap.docs[snap.docs.length - 1]
+      : null;
+  }
+
+  /*────────── 8 | Yeni boş satır ekleme ──────────*/
+  function addRow() {
+    if (unsavedRowExists()) return;
+    // “Boş satır” diyerek blankRow() dizisini ekle
+    const node = table.row.add(blankRow()).draw(false).node();
+    // Boş satırı en sonda tutmak adına, 13. sütun (gizli) çok büyük değer atıyoruz
+    $(node).find("td").last().text("");
+    $(node).attr("data-created", Number.MAX_SAFE_INTEGER);
+    // Son sayfaya geçir
+    table.page("last").draw(false);
+  }
+  window.addRow = addRow;
+  
+  /*────────── 9 | “Kaydet” butonuna tıklanınca ──────────*/
+  $(document).on("click", ".save-btn:not([disabled])", async function(){
+    const $row = $(this).closest("tr");
+    const td   = (i) => $row.children("td").eq(i);
+    const val  = (i) => {
+      const $el = td(i).find("input, select");
+      return $el.length ? $el.val().trim() : td(i).text().trim();
+    };
+
+ const data = {
+    date       : val(0),             // string
+    supplier   : val(1),             // string
+    customer   : val(2),             // string
+    project    : val(3),             // string
+    description: val(4),             // string
+    amount     : +val(5) || 0,       // number
+    expense    : +val(6) || 0,       // number
+    vat        : val(7),             // string
+    channel    : val(8),             // string
+    receipt    : val(9),             // string
+    cash       : "",
+    createdBy  : { uid, name, role },
+    createdAt  : firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // “Boş alan” kontrolü: hepsinin mutlaka dolu olması gerekiyor
+  if (
+    !data.date ||
+    !data.supplier ||
+    !data.customer ||
+    !data.project ||
+    !data.description ||
+    !data.vat ||
+    !data.channel ||
+    !data.receipt
+  ) {
+    alert("Lütfen tüm alanları eksiksiz doldurun.");
+    return;
+  }
+
+  // “Tutar veya Gider” kontrolü: en az birinin sıfırdan büyük olması lazım
+  if (data.amount <= 0 && data.expense <= 0) {
+    alert("Lütfen en az 'Tutar' veya 'Gider' alanlarından birine 0’dan büyük bir değer girin.");
+    return;
+  }
+      const projectVal = val(3); // 3 = “Proje” sütunu indeksi
+
+  // Datalist’teki tüm <option> değerlerini bir array’e alalım
+  const validProjects = Array.from(
+    document.querySelectorAll("#projectList option")
+  ).map(opt => opt.value.trim());
+
+  if (!validProjects.includes(projectVal)) {
+    alert("Lütfen aşağıdaki listeden geçerli bir proje seçin!");
+    return;
+  }
+    // 1) Firestore’a ekle
+    await db.collection("transactions").add(data);
+
+    // 2) DataTables satırını doldur, “gizli” sütunun en son timestamp’ini bugün olarak ayarla
+    table.row($row).data([
+      `<td>${data.date}</td>`,
+      `<td>${data.supplier}</td>`,
+      `<td>${data.customer}</td>`,
+      `<td>${data.project}</td>`,
+      `<td>${data.description}</td>`,
+      `<td>${data.amount}</td>`,
+      `<td>${data.expense}</td>`,
+      `<td>${data.vat}</td>`,
+      `<td>${data.channel}</td>`,
+      `<td>${data.receipt}</td>`,
+      `<td class="action-buttons">
+         <button class="save-btn" disabled title="Kayıtlı">
+           <i class="fas fa-check"></i>
+         </button>
+       </td>`,
+      `<td>${data.cash || ""}</td>`,
+      Date.now()  // 13. sütun: güncel timestamp → bu satır en sona sıralanacak
+    ]).invalidate();
+
+    // Satıra yeni timestamp’i attribute olarak da yaz:
+    $row.attr("data-created", Date.now());
+    redIfNoReceipt($row, data.receipt);
+
+    // 3) Tabloyu yeniden sırala ve **son sayfaya** geç:
+    table.order([[12, "asc"]]).draw(false);
+    table.page("last").draw(false);
+
+    // 4) Yeni bir boş satır ekle
+    addRow();
+  });
+
+let sahaciRowToDelete = null;
+
+// 1) “request-delete-btn” tıklandığında modal’ı aç
+$(document).on('click', '.request-delete-btn', function() {
+  sahaciRowToDelete = $(this).closest('tr');
+  $('#sahaciDeleteModal').fadeIn(200);
+});
+
+// 2) “İptal”e tıklayınca modal’ı kapat
+$('#cancelSahaciDelete').on('click', () => {
+  sahaciRowToDelete = null;
+  $('#sahaciDeleteModal').fadeOut(200);
+});
+
+// 3) “Evet, Gönder”e tıkladığında Firestore’a talebi yaz
+$('#confirmSahaciDelete').on('click', async () => {
+  if (!sahaciRowToDelete) return;
+  const btn   = sahaciRowToDelete.find('.request-delete-btn');
+  const docId = btn.data('id');
+  try {
+    await db.collection('transactions').doc(docId).update({
+      pendingDeletion:      true,
+      deletionRequestedAt:   firebase.firestore.FieldValue.serverTimestamp(),
+      deletionRequestedBy:   { uid, name, role }
+    });
+
+    // ikon ve buton durumunu güncelle
+    btn
+      .removeClass('request-delete-btn')
+      .addClass('pending-delete-btn')
+      .attr('title','Silme talebi bekleniyor')
+      .find('i')
+        .removeClass('fa-trash-alt')
+        .addClass('fa-hourglass-half');
+    btn.prop('disabled', true);
+
+    alert('Silme isteğiniz yöneticilere iletildi.');
+  } catch (err) {
+    console.error(err);
+    alert('Silme isteği gönderilirken hata oluştu: ' + err.message);
+  } finally {
+    sahaciRowToDelete = null;
+    $('#sahaciDeleteModal').fadeOut(200);
+  }
+});
+
+
+const filterSelect = document.getElementById("filter-select");
+const filterList   = document.getElementById("filter-list");
+
+filterSelect.addEventListener("change", function () {
+  const val   = this.value;                   // Örn: "musteri"
+  const label = this.options[this.selectedIndex].text; // Örn: "Müşteri"
+
+  // Aynı filtre iki kez eklenmesin:
+  if (document.getElementById("filter-" + val)) {
+    this.selectedIndex = 0;
+    return;
+  }
+
+  const div = document.createElement("div");
+  div.className = "filter-item";
+  div.id = "filter-" + val;
+  div.innerHTML = `
+    <span style="font-weight:500;">${label}:</span>
+    <input type="text" name="${val}" placeholder="Değer girin" />
+    <span class="remove-btn" style="font-size:1rem;">×</span>
+  `;
+  // “×” ikonu tıklandığında bu filtre kaldırılıyor:
+  div.querySelector(".remove-btn").addEventListener("click", () => div.remove());
+
+  filterList.appendChild(div);
+  this.selectedIndex = 0;
+});
+function performSearch () {
+  const dt      = $("#gelirGiderTablo").DataTable();   // aktif tablo
+  const map     = {            // kolon indeksleri
+    tarih:0, tedarikci:1, musteri:2, proje:3, aciklama:4,
+    tutar:5, gider:6, kdv:7, kanal:8, makbuz:9
+  };
+  table.on("draw", function () {
+  updateRunningCash();
+});
+
+  /* 1) Aktif filtre kutularını oku  ----------------------------------------*/
+  const active = {};            // {colIdx: "aranacakDeğer"}
+  document.querySelectorAll("#filter-list input").forEach(inp => {
+    const val = inp.value.trim();
+    if (!val) return;           // boş bırakılmış kutuyu atla
+    const idx = map[inp.name];
+    if (idx !== undefined) active[idx] = val.toLowerCase();
+    window.__excelFilterMap = active;
+  });
+
+  /* 2) Satırları tek tek gez; eşleşmiyorsa gizle, eşleşiyorsa göster -------*/
+  dt.rows().every(function () {
+    const rowNode = $(this.node());
+    const rowData = this.data();                  // <td> HTML dizisi
+    let match = true;
+
+    for (const colIdx in active) {
+      // Hücre içindeki etiketleri temizle, sadece metni al:
+      const cellText = $(rowNode).children().eq(colIdx).text().trim().toLowerCase();
+      if (cellText !== active[colIdx]) { match = false; break; }
+    }
+
+    match ? rowNode.show() : rowNode.hide();
+  });
+
+    if (Object.keys(active).length) {
+    dt.page.len(-1);          // filtre varsa tüm satırları tek sayfa göster
+  } else {
+    dt.page.len(10);          // filtre boşsa varsayılan 10’a dön
+  }
+
+  dt.draw(false);  
+  updateRunningCash(); // sayfalama/numaralandırmayı güncelle
+}
+
+/* İsterseniz kutulara yazarken anında filtre yapmak için: */
+document.getElementById("filter-list").addEventListener("keyup", e => {
+  if (e.target.matches("input")) performSearch();
+});
+
+
+function updateRunningCash () {
+  let kasa = 0;
+
+  table.rows({ search:"applied", order:"applied", page:"all" })
+       .every(function () {
+         const row   = this;
+         const cells = $(row.node()).children();
+
+         const gelen = toFloat(cells.eq(5).text());
+         const giden = toFloat(cells.eq(6).text());
+
+         kasa += (gelen - giden);
+
+         const fmt = num(kasa);                 // Ör: “1.234,00”
+         cells.eq(11).text(fmt);                // BURAYA DİKKAT
+
+         /* 2) DataTables önbelleğine yaz → Excel görsün */
+         const d = row.data();                  // d bir dizi: [ "2025-05-10", "ACME", …, "<td>1234</td>", … ]
+         d[11] = `<td>${fmt}</td>`;             // <-- Problemli: Etiket ekliyor
+         row.data(d, false);
+       });
+}
+
+
+/* Para → “1 234,00 TL”  |  type==='sort' için ham sayı döner          */
+/**
+ * Para biçimlendirici:
+ *  - type==='sort'||'type' ise ham sayı döner (sıralama için)
+ *  - değilse “1 234,00 TL” gibi string döner
+ */
+function fmtTL(val, type) {
+  // 1) Gelen val: bazen "<td>1234</td>", "1234 TL" ya da "1234" olabilir.
+  //    Önce varsa HTML etiketlerini çıkar:
+  const withoutTags = String(val).replace(/<[^>]*>/g, '');
+  // 2) Eğer içinde “TL” yazısı varsa temizle:
+  const onlyDigits = withoutTags.replace(/TL/gi, '').trim();
+  // 3) Şimdi sayıya dönüştür:
+  const n = parseFloat(
+    onlyDigits.replace(/\./g, '').replace(',', '.')
+  ) || 0;
+
+  // 4) Eğer sort veya type isteği geldiyse ham sayı dön:
+  if (type === 'sort' || type === 'type') {
+    return n;
+  }
+  // 5) Eğer n=0 ise boş hücre döndür (tercihe göre “0,00 TL” da yazılabilir):
+  if (!n) {
+    return '';
+  }
+  // 6) Normal görüntü için “1 234,00 TL” biçimlendirme:
+  return num(n) + ' TL';
+}
+
+
+</script>
+
+
+  </body>
+</html>

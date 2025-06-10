@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prodem Yapı | Sahacı Listesi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --light-color: #f8f9fa;
+        --border-radius: 6px;
+        --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+
+      .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 25px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+      }
+
+      .page-title {
+        text-align: center;
+        margin-bottom: 25px;
+        color: var(--primary-color);
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .search-bar {
+        display: flex;
+        margin-bottom: 20px;
+      }
+
+      .search-bar input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        font-size: 14px;
+      }
+
+      .search-bar button {
+        padding: 10px 15px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        cursor: pointer;
+      }
+
+      .search-bar button:hover {
+        background-color: var(--secondary-color);
+      }
+
+      .sahaci-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-top: 20px;
+      }
+
+      .sahaci-table th,
+      .sahaci-table td {
+        padding: 12px 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+        word-wrap: break-word;
+      }
+
+      .sahaci-table th {
+        background-color: var(--light-color);
+        font-weight: bold;
+      }
+
+      .sahaci-table tr:hover {
+        background-color: #f1f3ff;
+      }
+
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .edit-btn,
+      .delete-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .edit-btn {
+        background-color: #4caf50;
+        color: white;
+      }
+
+      .delete-btn {
+        background-color: #f44336;
+        color: white;
+      }
+
+      .password-form {
+        margin-top: 10px;
+        text-align: left;
+      }
+
+      .password-form label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .password-form input {
+        width: 100%;
+        padding: 6px;
+        margin-bottom: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      .password-form button {
+        padding: 8px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+          margin: 15px;
+        }
+
+        .sahaci-table {
+          display: block;
+          overflow-x: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">Prodem Yapı</div>
+    <div class="container">
+      <h2 class="page-title">Sahacı Listesi</h2>
+      <div class="search-bar">
+        <input id="searchInput" type="text" placeholder="Sahacı ara..." />
+        <button id="searchBtn">
+          <i class="fas fa-search"></i> Ara
+        </button>
+      </div>
+      <table class="sahaci-table">
+        <thead>
+          <tr>
+            <th style="width:20%">ID</th>
+            <th style="width:40%">İsim Soyisim</th>
+            <th style="width:40%">İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="sahaciBody">
+          <!-- JS ile doldurulacak -->
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <script>
+      // 1) Firebase init
+      const firebaseConfig = {
+        apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+        authDomain: "barkod-5de5e.firebaseapp.com",
+        projectId: "barkod-5de5e",
+        storageBucket: "barkod-5de5e.appspot.com",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // 2) Admin rol kontrolü
+      const role = localStorage.getItem("role");
+      if (role !== "admin") {
+        alert("Bu sayfaya sadece Yönetici erişebilir.");
+        location.href = "index.html";
+      }
+
+      const body = document.getElementById("sahaciBody");
+
+      // 3) Sahacileri yükle
+      async function loadSahacis() {
+        body.innerHTML = "";
+        try {
+          const snap = await db
+            .collection("users")
+            .where("role", "==", "sahaci")
+            .orderBy("fullNameLower", "asc")
+            .get();
+
+          snap.forEach(doc => {
+            const d = doc.data();
+            // Eğer ileride pasif kullanıcı eklenirse:
+            if (d.disabled === true) return;
+
+            const tr = document.createElement("tr");
+            tr.dataset.id = doc.id;
+            tr.innerHTML = `
+              <td>${doc.id}</td>
+              <td class="name-cell">${d.fullName}</td>
+              <td class="action-buttons">
+                <button class="edit-btn"><i class="fas fa-edit"></i> Düzenle</button>
+                <button class="delete-btn"><i class="fas fa-trash"></i> Sil</button>
+              </td>`;
+            body.appendChild(tr);
+          });
+          attachRowHandlers();
+        } catch (err) {
+          console.error("Sahacı yükleme hatası:", err);
+        }
+      }
+
+      // 4) Satır buton işlevleri
+      function attachRowHandlers() {
+        // Sil butonu
+        document.querySelectorAll(".delete-btn").forEach(btn => {
+          btn.onclick = async () => {
+            const tr = btn.closest("tr");
+            if (!confirm("Bu sahacıyı pasifleştirmek istediğinize emin misiniz?")) return;
+            const id = tr.dataset.id;
+            await db.collection("users").doc(id).update({ disabled: true });
+            tr.remove();
+          };
+        });
+
+        // Düzenle butonu (şifre formu toggle)
+        function closeAllForms() {
+          document.querySelectorAll(".password-form").forEach(f => f.remove());
+        }
+        document.querySelectorAll(".edit-btn").forEach(btn => {
+          btn.onclick = () => {
+            closeAllForms();
+            const cell = btn.closest("td");
+            const tr  = btn.closest("tr");
+            const dId = tr.dataset.id;
+            // Şifre formu oluştur
+            const form = document.createElement("div");
+            form.className = "password-form";
+            form.innerHTML = `
+              <label>Yeni Şifre:</label>
+              <input type="password" id="newPass-${dId}" placeholder="Yeni şifre girin" />
+              <button id="savePass-${dId}">Kaydet</button>`;
+            cell.appendChild(form);
+            // Kaydet
+            document.getElementById(`savePass-${dId}`).onclick = async () => {
+              const newPass = document.getElementById(`newPass-${dId}`).value.trim();
+              if (newPass.length < 6) {
+                alert("Şifre en az 6 karakter olmalı.");
+                return;
+              }
+              // Burada bcrypt veya Firebase Auth kullanılabilir.
+              // Örnek: Firestore'da hash saklamak (uygulamanıza göre değiştirin):
+              const hash = newPass; // gerçek hash işlemine adapte edin
+              await db.collection("users").doc(dId).update({ passHash: hash });
+              alert("Şifre güncellendi.");
+              form.remove();
+            };
+          };
+        });
+      }
+
+      // 5) Arama işlevi
+      document.getElementById("searchInput").oninput = e => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll("#sahaciBody tr").forEach(tr => {
+          const name = tr.querySelector(".name-cell").textContent.toLowerCase();
+          tr.style.display = name.includes(term) ? "" : "none";
+        });
+      };
+
+      // Sayfa hazır
+      loadSahacis();
+    </script>
+  </body>
+</html>

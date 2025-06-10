@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prodem Yapı | Veri Yönetimi</title>
+
+    <!-- FONT & CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- STİL (eksiksiz kopyalayın) -->
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --primary-hover: #3a56d4;
+        --secondary-color: #3f37c9;
+        --danger-color: #e63946;
+        --danger-hover: #d13440;
+        --light-color: #f8f9fa;
+        --dark-color: #212529;
+        --gray-color: #6c757d;
+        --border-radius: 8px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fb;
+        color: var(--dark-color);
+        line-height: 1.6;
+      }
+      .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+      }
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+      .card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+      }
+      .form-group { margin-bottom: 1.5rem; }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--dark-color);
+      }
+      select, input[type="text"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        font-family: inherit;
+        font-size: 1rem;
+        transition: var(--transition);
+      }
+      select:focus, input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: var(--border-radius);
+        font-family: inherit;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+      .btn-primary:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+      }
+      .btn-danger {
+        background-color: var(--danger-color);
+        color: white;
+      }
+      .btn-danger:hover {
+        background-color: var(--danger-hover);
+      }
+      .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+      }
+      .btn i { margin-right: 0.5rem; }
+      .form-section {
+        display: none;
+        margin-top: 2rem;
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .section-title {
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+      }
+      .section-title i { margin-right: 0.75rem; }
+      .input-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      .input-group input { flex: 1; }
+      .list-container {
+        border-top: 1px solid #eee;
+        padding-top: 1.5rem;
+      }
+      .list-title {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        color: var(--gray-color);
+        display: flex;
+        align-items: center;
+      }
+      .list-title i { margin-right: 0.5rem; }
+      .list { list-style: none; }
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background-color: var(--light-color);
+        border-radius: var(--border-radius);
+        margin-bottom: 0.75rem;
+        transition: var(--transition);
+      }
+      .list-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .empty-message {
+        color: var(--gray-color);
+        font-style: italic;
+        text-align: center;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: var(--border-radius);
+      }
+      @media (max-width: 768px) {
+        .container { padding: 0 1rem; }
+        .card { padding: 1.5rem; }
+        .input-group { flex-direction: column; }
+      }
+    </style>
+
+    <!-- 1) jQuery’yi kesinlikle en başta ekleyin -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- 2) Firestore SDK’sı (veya başka script’ler) -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+
+    <!-- 3) colResizable, DataTables gibi eklentileriniz -->
+    <script src="https://cdn.jsdelivr.net/npm/colresizable/colResizable-1.6.min.js"></script>
+
+    <!-- 4) Kendi script’lerinizi sayfanın en başına eklemek yerine, body’nin en sonuna alın -->
+  </head>
+
+  <body>
+    <div class="header">Prodem Yapı</div>
+
+    <div class="container">
+      <div class="card">
+        <div class="form-group">
+          <label for="kategoriSec">Kategori Seçin</label>
+          <select id="kategoriSec">
+            <option value="">-- Lütfen bir kategori seçin --</option>
+            <option value="proje">Proje</option>
+            <option value="tedarikci">Tedarikçi</option>
+            <option value="odeme">Ödeme Kanalı</option>
+          </select>
+        </div>
+
+        <!-- Proje Formu -->
+        <div id="proje" class="form-section">
+          <h2 class="section-title"><i class="fas fa-project-diagram"></i>Proje</h2>
+          <div class="input-group">
+            <input type="text" id="projeInput" placeholder="Proje adı girin" />
+            <button class="btn btn-primary" onclick="ekle('proje')">
+              <i class="fas fa-plus"></i> Ekle
+            </button>
+          </div>
+          <div class="list-container">
+            <h3 class="list-title"><i class="fas fa-list"></i>Proje Listesi</h3>
+            <ul id="projeList" class="list">
+              <li class="empty-message">Henüz proje eklenmedi</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Tedarikçi Formu -->
+        <div id="tedarikci" class="form-section">
+          <h2 class="section-title"><i class="fas fa-truck"></i>Tedarikçi</h2>
+          <div class="input-group">
+            <input type="text" id="tedarikciInput" placeholder="Tedarikçi adı girin" />
+            <button class="btn btn-primary" onclick="ekle('tedarikci')">
+              <i class="fas fa-plus"></i> Ekle
+            </button>
+          </div>
+          <div class="list-container">
+            <h3 class="list-title"><i class="fas fa-list"></i>Tedarikçi Listesi</h3>
+            <ul id="tedarikciList" class="list">
+              <li class="empty-message">Henüz tedarikçi eklenmedi</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Ödeme Kanalı Formu -->
+        <div id="odeme" class="form-section">
+          <h2 class="section-title"><i class="fas fa-credit-card"></i>Ödeme Kanalı</h2>
+          <div class="input-group">
+            <input type="text" id="odemeInput" placeholder="Ödeme kanalı girin" />
+            <button class="btn btn-primary" onclick="ekle('odeme')">
+              <i class="fas fa-plus"></i> Ekle
+            </button>
+          </div>
+          <div class="list-container">
+            <h3 class="list-title"><i class="fas fa-list"></i>Ödeme Kanalı Listesi</h3>
+            <ul id="odemeList" class="list">
+              <li class="empty-message">Henüz ödeme kanalı eklenmedi</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5) Bu noktadan sonra tüm özel JS’inizi koyun -->
+    <script>
+      // ────────── 1) Firebase Init ────────────────────────────
+      firebase.initializeApp({
+        apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+        authDomain: "barkod-5de5e.firebaseapp.com",
+        projectId: "barkod-5de5e",
+        storageBucket: "barkod-5de5e.appspot.com"
+      });
+      const db = firebase.firestore();
+
+      // ────────── 2) Oturum Kontrolü (opsiyonel) ────────────────
+      const uid  = localStorage.getItem("uid");
+      const role = localStorage.getItem("role");
+      const name = localStorage.getItem("name");
+      if (!uid || role !== "admin") {
+        location.href = "index.html";
+      }
+
+      // ────────── 3) Helper fonksiyonlar ────────────────────────
+      function kategoriGoster() {
+        const secim     = document.getElementById("kategoriSec").value;
+        const kategoriler = ["proje", "tedarikci", "odeme"];
+        kategoriler.forEach(k => {
+          document.getElementById(k).style.display = (k === secim ? "block" : "none");
+        });
+      }
+
+      function checkEmptyList(listId) {
+        const list = document.getElementById(listId);
+        if (list.children.length === 0) {
+          list.innerHTML = `<li class="empty-message">Henüz ${listId.replace("List", "")} eklenmedi</li>`;
+        }
+      }
+
+      function createListItem(docId, nameText, kategori) {
+        const li = document.createElement("li");
+        li.className = "list-item";
+        li.setAttribute("data-id", docId);
+        li.innerHTML = `
+          ${nameText}
+          <button class="btn btn-danger btn-sm" onclick="sil('${kategori}', '${docId}')">
+            <i class="fas fa-trash"></i> Sil
+          </button>
+        `;
+        return li;
+      }
+
+      // ────────── 4) Firestore’dan verileri çek ve listele ────────
+      async function loadItems(kategori, collectionName, listId) {
+        const listEl = document.getElementById(listId);
+        listEl.innerHTML = "";
+        try {
+ const snapshot = await db
+   .collection(collectionName)
+   .orderBy("name", "asc")
+   .get();
+
+          if (snapshot.empty) {
+            listEl.innerHTML = `<li class="empty-message">Henüz ${kategori} eklenmedi</li>`;
+            return;
+          }
+
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const li = createListItem(doc.id, data.name, kategori);
+            listEl.appendChild(li);
+          });
+        } catch (err) {
+          console.error(`${collectionName} yükleme hatası:`, err);
+          listEl.innerHTML = `<li class="empty-message">Veri yüklenirken hata oluştu</li>`;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Kategoriler ve koleksiyon eşleşmesi
+        loadItems("proje",      "projects",   "projeList");
+        loadItems("tedarikci",  "suppliers",  "tedarikciList");
+        loadItems("odeme",      "payments",   "odemeList");
+
+        // Kategori seçimi değiştiğinde göster/gizle
+        document.getElementById("kategoriSec")
+                .addEventListener("change", kategoriGoster);
+      });
+
+      // ────────── 5) Ekleme işlemi ───────────────────────────────
+      function ekle(kategori) {
+        let inputEl = document.getElementById(kategori + "Input");
+        let value   = inputEl.value.trim();
+        if (!value) { inputEl.focus(); return; }
+
+        let collectionName, listId;
+        if (kategori === "proje")      { collectionName = "projects";   listId = "projeList"; }
+        else if (kategori === "tedarikci") { collectionName = "suppliers";  listId = "tedarikciList"; }
+        else if (kategori === "odeme")  { collectionName = "payments";   listId = "odemeList"; }
+
+        db.collection(collectionName)
+          .add({
+            name: value,
+            createdBy: { uid, name, role },
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          })
+          .then(docRef => {
+            // Boş mesajı sil
+            const listEl = document.getElementById(listId);
+            if (listEl.querySelector(".empty-message")) {
+              listEl.innerHTML = "";
+            }
+            // DOM’a ekle
+            const li = createListItem(docRef.id, value, kategori);
+            listEl.appendChild(li);
+
+            inputEl.value = "";
+            inputEl.focus();
+          })
+          .catch(err => {
+            console.error("Ekleme hatası:", err);
+            alert("Eklerken bir hata oluştu.");
+          });
+      }
+
+      // ────────── 6) Silme işlemi ─────────────────────────────────
+      function sil(kategori, docId) {
+        let collectionName, listId;
+        if (kategori === "proje")      { collectionName = "projects";  listId = "projeList"; }
+        else if (kategori === "tedarikci") { collectionName = "suppliers"; listId = "tedarikciList"; }
+        else if (kategori === "odeme")  { collectionName = "payments";  listId = "odemeList"; }
+
+        if (!confirm("Bu elemanı silmek istediğinize emin misiniz?")) {
+          return;
+        }
+        db.collection(collectionName)
+          .doc(docId)
+          .delete()
+          .then(() => {
+            // DOM’dan kaldır
+            const listEl = document.getElementById(listId);
+            const itemEl = listEl.querySelector(`li[data-id='${docId}']`);
+            if (itemEl) itemEl.remove();
+            checkEmptyList(listId);
+          })
+          .catch(err => {
+            console.error("Silme hatası:", err);
+            alert("Silinirken bir hata oluştu.");
+          });
+      }
+    </script>
+  </body>
+</html>

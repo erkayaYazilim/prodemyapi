@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gelir - Gider Takibi | Yeni Kayıt</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <!-- bcryptjs (şifre hash’lemek için) -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"
+      crossorigin="anonymous"
+      onload="window.bcrypt = dcodeIO.bcrypt"
+    ></script>
+
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --light-color: #f8f9fa;
+        --border-radius: 6px;
+        --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        color: #333;
+      }
+
+      .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 30px;
+      }
+
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 25px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+      }
+
+      .form-title {
+        text-align: center;
+        margin-bottom: 25px;
+        color: var(--primary-color);
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #555;
+        font-weight: bold;
+      }
+
+      input[type="text"],
+      input[type="password"],
+      input[list] {
+        width: 100%;
+        padding: 10px 15px 10px 35px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+      }
+
+      /* İkonlu input */
+      .input-icon {
+        position: absolute;
+        left: 12px;
+        top: 36px;
+        color: #777;
+      }
+
+      /* Şifre gizle/göster ikonu */
+      .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 36px;
+        color: #777;
+        cursor: pointer;
+      }
+
+      .btn-submit {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: var(--border-radius);
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 25px;
+        transition: all 0.2s ease;
+      }
+
+      .btn-submit:hover {
+        background: var(--secondary-color);
+      }
+
+      .user-type-options {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+
+      .user-type-option {
+        flex: 1;
+      }
+
+      .user-type-option input[type="radio"] {
+        display: none;
+      }
+
+      /* Radio simülasyonu için etiket stili */
+      .user-type-option label {
+        display: block;
+        padding: 12px;
+        background-color: var(--light-color);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-align: center;
+        font-size: 14px;
+        font-weight: bold;
+        transition: all 0.2s ease;
+      }
+
+      .user-type-option input[type="radio"]:checked + label {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          margin: 20px;
+          padding: 20px;
+        }
+        .user-type-options {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <i class="fas fa-chart-line" style="margin-right: 10px"></i>
+      Gelir - Gider Takibi
+    </div>
+
+    <div class="container">
+      <h2 class="form-title">Yeni Kullanıcı Kaydı</h2>
+
+      <form id="registrationForm">
+        <!-- 1) Kullanıcı tipi: Sahacı veya Ortak -->
+        <div class="user-type-options">
+          <div class="user-type-option">
+            <input type="radio" id="sahaci" name="userType" value="sahaci" />
+            <label for="sahaci">Sahacı</label>
+          </div>
+          <div class="user-type-option">
+            <input type="radio" id="ortak" name="userType" value="ortak" checked />
+            <label for="ortak">Ortak</label>
+          </div>
+        </div>
+
+        <!-- 2) İsim Soyisim -->
+        <div class="form-group">
+          <label for="fullName">İsim Soyisim</label>
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" id="fullName" name="fullName" required />
+        </div>
+
+        <!-- 3) Şifre -->
+        <div class="form-group">
+          <label for="password">Şifre</label>
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="password" name="password" required minlength="6" />
+          <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+        </div>
+
+        <!-- 4) Ortak için “Proje” seçimi (datalist ile) -->
+        <div class="form-group" id="projectGroup">
+          <label for="projectInput">Proje Seçin</label>
+          <i class="fas fa-briefcase input-icon"></i>
+          <input
+            list="projectList"
+            id="projectInput"
+            name="project"
+            placeholder="Proje adına yazın, listeden seçin"
+          />
+          <!-- Buraya JS ile eklenecek -->
+          <datalist id="projectList"></datalist>
+        </div>
+
+        <button type="submit" class="btn-submit">Kayıt Oluştur</button>
+      </form>
+    </div>
+
+    <script>
+      // 1) Firebase konfigürasyonunuzu buraya ekleyin (console’dan kopyalayın)
+      const firebaseConfig = {
+        apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+        authDomain: "barkod-5de5e.firebaseapp.com",
+        projectId: "barkod-5de5e",
+        storageBucket: "barkod-5de5e.appspot.com",
+        messagingSenderId: "436773145974",
+        appId: "1:436773145974:web:b2d5d0e52235d22e327e57",
+        measurementId: "G-HG604CLMC5",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // 2) bcrypt’in yüklenmesini bekleyelim
+      async function waitForBcrypt(maxMs = 1000) {
+        const start = Date.now();
+        while (typeof window.bcrypt === "undefined") {
+          if (Date.now() - start > maxMs) throw new Error("bcrypt yüklenemedi!");
+          await new Promise((r) => setTimeout(r, 20));
+        }
+      }
+
+      (async () => {
+        await waitForBcrypt();
+
+        // 3) "Ortak" veya "Sahacı" seçimine göre proje alanını göster/gizle
+        const sahaciRadio = document.getElementById("sahaci");
+        const ortakRadio = document.getElementById("ortak");
+        const projectGroup = document.getElementById("projectGroup");
+
+        function toggleProjectField() {
+          if (ortakRadio.checked) {
+            projectGroup.style.display = "block";
+          } else {
+            projectGroup.style.display = "none";
+            document.getElementById("projectInput").value = "";
+          }
+        }
+
+        sahaciRadio.addEventListener("change", toggleProjectField);
+        ortakRadio.addEventListener("change", toggleProjectField);
+        // Sayfa açıldığında doğru durumu ayarla
+        toggleProjectField();
+
+        // 4) Firestore’dan “projects” koleksiyonunu çekip <datalist>’i dolduralım
+        const projectListEl = document.getElementById("projectList");
+        const projectSet = new Set(); // validasyon için isimleri saklayacağız
+
+        try {
+          const snapshot = await db.collection("projects").orderBy("name", "asc").get();
+          snapshot.forEach((doc) => {
+            const name = doc.data().name || "";
+            const option = document.createElement("option");
+            option.value = name;
+            projectListEl.appendChild(option);
+            projectSet.add(name.toLowerCase());
+          });
+        } catch (err) {
+          console.error("Projeler yüklenirken hata:", err);
+          // Hata durumunda listeyi boş bırakabiliriz
+        }
+
+        // 5) Şifre göster/gizle işlevi
+        const togglePassword = document.getElementById("togglePassword");
+        const passwordInput = document.getElementById("password");
+        togglePassword.addEventListener("click", () => {
+          const type = passwordInput.type === "password" ? "text" : "password";
+          passwordInput.type = type;
+          togglePassword.classList.toggle("fa-eye");
+          togglePassword.classList.toggle("fa-eye-slash");
+        });
+
+        // 6) Form submit işlemi
+        document.getElementById("registrationForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const role = document.querySelector('input[name="userType"]:checked').value;
+          const fullName = document.getElementById("fullName").value.trim();
+          const pass = passwordInput.value;
+          const projectValue = document.getElementById("projectInput").value.trim();
+
+          // Zorunlu alanlar: fullName ve şifre en az 6 karakter
+          if (!fullName || pass.length < 6) {
+            alert("Lütfen geçerli isim ve en az 6 haneli şifre girin.");
+            return;
+          }
+
+          // “Ortak” ise mutlaka geçerli bir proje seçilmiş olmalı
+          if (role === "ortak") {
+            if (!projectValue) {
+              alert("Ortak için mutlaka bir proje seçmelisiniz.");
+              return;
+            }
+            // Datalist’teki isimlerden biri değilse
+            if (!projectSet.has(projectValue.toLowerCase())) {
+              alert("Lütfen listeden geçerli bir proje seçin.");
+              return;
+            }
+          }
+
+          // Aynı isimle daha önce kayıt yapılmış mı kontrol edelim
+          const same = await db
+            .collection("users")
+            .where("fullNameLower", "==", fullName.toLowerCase())
+            .get();
+          if (!same.empty) {
+            alert("Bu isim zaten kayıtlı!");
+            return;
+          }
+
+          // Şifreyi hash’leyelim
+          const passHash = bcrypt.hashSync(pass, 10);
+
+          // Firestore’a kaydı ekleyelim
+          try {
+            await db.collection("users").add({
+              fullName: fullName,
+              fullNameLower: fullName.toLowerCase(),
+              passHash: passHash,
+              role: role,
+              project: role === "ortak" ? projectValue : "", // Sahacı için boş bırak
+              createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            });
+            alert("Kayıt başarıyla oluşturuldu 🎉");
+            e.target.reset();
+            // Proje alanını tekrar gizle
+            toggleProjectField();
+          } catch (err) {
+            console.error("Kayıt sırasında hata:", err);
+            alert("Kayıt oluşturulurken bir hata oluştu.");
+          }
+        });
+      })().catch((err) => {
+        console.error(err);
+        alert("Beklenmeyen bir hata oluştu: " + err.message);
+      });
+    </script>
+  </body>
+</html>

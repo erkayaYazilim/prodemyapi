@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Toplu Yükle & Kayıt Et</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: sans-serif; padding:20px; }
+    .invalid { background: #f8d7da; }
+    table { width:100%; border-collapse: collapse; margin-top:10px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:left; }
+    #progress { width:100%; height:20px; display:none; margin-top:10px; }
+    #log { margin-top:10px; white-space: pre-wrap; }
+    button { padding:8px 16px; margin-left:10px; }
+  </style>
+</head>
+<body>
+  <h1>Excel’den Toplu Kayıt</h1>
+  <input type="file" id="fileInput" accept=".xlsx,.xls">
+  <button id="uploadBtn" disabled>Yükle & Kayıt Et</button>
+  <progress id="progress" max="100" value="0"></progress>
+  <div id="log"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Tarih</th>
+        <th>Tedarikçi</th>
+        <th>Müşteri</th>
+        <th>Proje</th>
+        <th>Açıklama</th>
+        <th>Tutar</th>
+        <th>Gider</th>
+        <th>KDV</th>
+        <th>Ödeme Kanalı</th>
+        <th>Tahsilat Makbuzu</th>
+      </tr>
+    </thead>
+    <tbody id="preview"></tbody>
+  </table>
+
+  <script>
+    // --- Firebase init ---
+    firebase.initializeApp({
+    apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+    authDomain: "barkod-5de5e.firebaseapp.com",
+    projectId:  "barkod-5de5e",
+    storageBucket: "barkod-5de5e.appspot.com"
+    });
+    const db = firebase.firestore();
+
+    // Şu anki kullanıcı bilgisi (localStorage’dan veya başka yolla)
+    const senderName = localStorage.getItem('name') || 'Unknown';
+    const senderUid  = localStorage.getItem('uid')  || 'bulk-upload';
+    const senderRole = localStorage.getItem('role') || 'system';
+
+    let rows = [];
+    const preview   = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progress  = document.getElementById('progress');
+    const logEl     = document.getElementById('log');
+
+    // Excel seçildiğinde parse et
+    fileInput.addEventListener('change', async e => {
+      const buf = await e.target.files[0].arrayBuffer();
+      const wb  = XLSX.read(buf,{type:'array'});
+      const js  = XLSX.utils.sheet_to_json(
+        wb.Sheets[wb.SheetNames[0]],{defval:""}
+      );
+      rows = js.map((r,i)=>{
+        // zorunlu: Tarih,supplier,customer,project,description,kdv,channel,receipt
+        const okRequired = r["Tarih"] && r["Tedarikçi"] &&
+                           r["Müşteri"] && r["Proje"] &&
+                           r["Açıklama"] && r["KDV"] &&
+                           r["Ödeme Kanalı"] && r["Tahsilat Makbuzu"];
+        // tutar veya giderden en az birisi >0
+        const okAmount = (parseFloat(r["Tutar"])||0)>0 
+                      || (parseFloat(r["Gider"])||0)>0;
+        return {
+          idx: i+1,
+          date:      r["Tarih"],
+          supplier:  r["Tedarikçi"],
+          customer:  r["Müşteri"],
+          project:   r["Proje"],
+          description: r["Açıklama"],
+          amount:    parseFloat(r["Tutar"])||0,
+          expense:   parseFloat(r["Gider"])||0,
+          vat:       r["KDV"],
+          channel:   r["Ödeme Kanalı"],
+          receipt:   r["Tahsilat Makbuzu"],
+          valid:     okRequired && okAmount
+        };
+      });
+      renderPreview();
+      uploadBtn.disabled = false;
+    });
+
+    function renderPreview(){
+      preview.innerHTML = '';
+      let good=0,bad=0;
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        if(!r.valid){ tr.classList.add('invalid'); bad++; }
+        else good++;
+        tr.innerHTML = `
+          <td>${r.idx}</td>
+          <td>${r.date}</td>
+          <td>${r.supplier}</td>
+          <td>${r.customer}</td>
+          <td>${r.project}</td>
+          <td>${r.description}</td>
+          <td>${r.amount}</td>
+          <td>${r.expense}</td>
+          <td>${r.vat}</td>
+          <td>${r.channel}</td>
+          <td>${r.receipt}</td>
+        `;
+        preview.appendChild(tr);
+      });
+      logEl.textContent = `${good} geçerli; ${bad} geçersiz satır atlandı.`;
+    }
+
+    uploadBtn.addEventListener('click', async ()=>{
+      uploadBtn.disabled = true;
+      progress.style.display = 'block';
+      const goodRows = rows.filter(r=>r.valid);
+      for(let i=0;i<goodRows.length;i++){
+        const r = goodRows[i];
+        await db.collection('transactions').add({
+          createdBy:    { uid:senderUid, name:senderName, role:senderRole },
+          createdAt:    firebase.firestore.FieldValue.serverTimestamp(),
+          date:         r.date,
+          supplier:     r.supplier,
+          customer:     r.customer,
+          project:      r.project,
+          description:  r.description,
+          amount:       r.amount,
+          expense:      r.expense,
+          vat:          r.vat,
+          channel:      r.channel,
+          receipt:      r.receipt,
+          cash:         ""
+        });
+        progress.value = (i+1)/goodRows.length*100;
+      }
+      logEl.textContent += `\n${goodRows.length} kayıt başarıyla eklendi.`;
+      uploadBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

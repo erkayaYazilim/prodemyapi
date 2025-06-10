@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Prodem Yapı | Ortak Listesi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <!-- bcryptjs -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"
+      crossorigin="anonymous"
+      onload="window.bcrypt = dcodeIO.bcrypt"
+    ></script>
+
+    <style>
+      :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --light-color: #f8f9fa;
+        --border-radius: 6px;
+        --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        margin: 0;
+        color: #333;
+      }
+      .header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 30px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 600;
+      }
+      .container {
+        max-width: 800px;
+        margin: 30px auto;
+        background: white;
+        padding: 25px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+      }
+      .page-title {
+        text-align: center;
+        margin-bottom: 25px;
+        color: var(--primary-color);
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .search-bar {
+        display: flex;
+        margin-bottom: 20px;
+      }
+      .search-bar input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: var(--border-radius) 0 0 var(--border-radius);
+        font-size: 14px;
+      }
+      .search-bar button {
+        padding: 10px 15px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        cursor: pointer;
+      }
+      .search-bar button:hover {
+        background-color: var(--secondary-color);
+      }
+      .sahaci-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      .sahaci-table th,
+      .sahaci-table td {
+        padding: 12px 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+        word-wrap: break-word;
+      }
+      .sahaci-table th {
+        background-color: var(--light-color);
+        font-weight: bold;
+      }
+      .sahaci-table tr:hover {
+        background-color: #f1f3ff;
+      }
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .edit-btn,
+      .delete-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: 13px;
+        color: white;
+      }
+      .edit-btn {
+        background-color: #4caf50;
+      }
+      .delete-btn {
+        background-color: #f44336;
+      }
+      @media (max-width: 768px) {
+        .container { margin: 15px; padding: 15px; }
+        .sahaci-table { display: block; overflow-x: auto; }
+      }
+      /* inline şifre formu */
+      .password-form { margin-top: 8px; text-align: left; }
+      .password-form input { width: calc(100% - 12px); padding: 6px; margin-top: 4px; border:1px solid #ccc; border-radius:4px; }
+      .password-form button {
+        margin-top: 6px;
+        padding: 6px 10px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="header">Prodem Yapı</div>
+    <div class="container">
+      <h2 class="page-title">Ortak Listesi</h2>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Ortak ara..." />
+        <button id="searchBtn"><i class="fas fa-search"></i> Ara</button>
+      </div>
+      <table class="sahaci-table" id="ortakTable">
+        <thead>
+          <tr>
+            <th style="width:20%">ID</th>
+            <th style="width:40%">İsim Soyisim</th>
+            <th style="width:40%">İşlemler</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <script>
+      // 1) Firestore init
+      const firebaseConfig = {
+        apiKey: "AIzaSyC6AxiB4W4swKVHVjbPpir-oGwtoGJn7pg",
+        authDomain: "barkod-5de5e.firebaseapp.com",
+        projectId: "barkod-5de5e",
+        storageBucket: "barkod-5de5e.appspot.com",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      // 2) Oturum kontrolü: sadece admin görebilsin
+      const uid = localStorage.getItem("uid");
+      const role = localStorage.getItem("role");
+      // (isteğe bağlı) admin'in hangi projeleri göreceğine göre filtre ekleyebilirsiniz
+      if (!uid || role !== "admin") {
+        location.href = "index.html";
+      }
+
+      // 3) Ortakları Firestore’dan çek ve tabloya ekle
+      const tbody = document.querySelector("#ortakTable tbody");
+      async function loadOrtaks() {
+        tbody.innerHTML = "";
+        const snap = await db
+          .collection("users")
+          .where("role", "==", "ortak")
+          .orderBy("fullNameLower", "asc")
+          .get();
+        snap.forEach(doc => {
+          const d = doc.data();
+          if (d.disabled) return; // giriş yetkisi kaldırılmışsa atla
+          const tr = document.createElement("tr");
+          tr.dataset.id = doc.id;
+          tr.innerHTML = `
+            <td>${doc.id}</td>
+            <td>${d.fullName}</td>
+            <td class="action-buttons">
+              <button class="edit-btn"><i class="fas fa-edit"></i> Düzenle</button>
+              <button class="delete-btn"><i class="fas fa-trash"></i> Sil</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        attachRowHandlers();
+      }
+
+      // 4) Arama
+      document.getElementById("searchBtn").addEventListener("click", () =>
+        document.getElementById("searchInput").dispatchEvent(new Event("input"))
+      );
+      document.getElementById("searchInput").addEventListener("input", e => {
+        const term = e.target.value.toLowerCase();
+        Array.from(tbody.rows).forEach(r => {
+          r.style.display = r.cells[1].textContent
+            .toLowerCase()
+            .includes(term) ? "" : "none";
+        });
+      });
+
+      // 5) Satırdaki Düzenle / Sil butonları olayları
+      function attachRowHandlers() {
+        // Sil: sadece giriş yetkisini kaldır
+        tbody.querySelectorAll(".delete-btn").forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm("Bu ortağın giriş yetkisini kaldırmak istediğinize emin misiniz?"))
+              return;
+            const row = btn.closest("tr"), id = row.dataset.id;
+            await db.collection("users").doc(id).update({ disabled: true });
+            row.remove();
+            alert("Giriş yetkisi kaldırıldı.");
+          };
+        });
+
+        // Düzenle: inline parola formu
+        tbody.querySelectorAll(".edit-btn").forEach(btn => {
+          btn.onclick = () => {
+            const cell = btn.closest("td");
+            // varsa kapat
+            const existing = cell.querySelector(".password-form");
+            if (existing) { existing.remove(); return; }
+            // diğerlerini kapat
+            document.querySelectorAll(".password-form").forEach(f => f.remove());
+            // formu ekle
+            const form = document.createElement("div");
+            form.className = "password-form";
+            form.innerHTML = `
+              <label>Yeni Şifre:</label>
+              <input type="text" placeholder="Yeni şifre girin" class="new-pass" />
+              <button>Güncelle</button>
+            `;
+            cell.appendChild(form);
+            // event
+            form.querySelector("button").onclick = async () => {
+              const np = form.querySelector(".new-pass").value;
+              if (np.length < 6) {
+                alert("En az 6 karakter girin."); return;
+              }
+              // hash ve Firestore güncelle
+              const hash = bcrypt.hashSync(np, 10);
+              await db.collection("users").doc(btn.closest("tr").dataset.id)
+                      .update({ passHash: hash });
+              alert("Şifre güncellendi.");
+              form.remove();
+            };
+          };
+        });
+      }
+
+      // 6) bcrypt’in yüklenmesini bekle, sonra yükle
+      (async function waitBcrypt() {
+        while (typeof bcrypt === "undefined") {
+          await new Promise(r => setTimeout(r, 20));
+        }
+        loadOrtaks();
+      })();
+    </script>
+  </body>
+</html>
